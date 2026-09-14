@@ -1,0 +1,87 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: vehicle-backend
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/vehicle_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      timeout: 2000ms
+
+  activemq:
+    broker-url: ${SPRING_ACTIVEMQ_BROKER_URL:vm://localhost?broker.persistent=false}
+    user: ${SPRING_ACTIVEMQ_USER:admin}
+    password: ${SPRING_ACTIVEMQ_PASSWORD:admin}
+    packages:
+      trust-all: true
+    in-memory: true
+
+  jms:
+    pub-sub-domain: false # Use queues by default
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:google-client-id-placeholder}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google-client-secret-placeholder}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          apple:
+            client-id: ${APPLE_CLIENT_ID:apple-service-id-placeholder}
+            client-secret: ${APPLE_CLIENT_SECRET:apple-client-secret-placeholder}
+            scope:
+              - name
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Apple
+        provider:
+          apple:
+            authorization-uri: https://appleid.apple.com/auth/authorize
+            token-uri: https://appleid.apple.com/auth/token
+            jwk-set-uri: https://appleid.apple.com/auth/keys
+            user-name-attribute: sub
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000 # 24 hours
+  admin:
+    email: ${DEFAULT_ADMIN_EMAIL:admin@vehicle.com}
+    password: ${DEFAULT_ADMIN_PASSWORD:AdminPassword123!}
+    first-name: System
+    last-name: Admin
+
+
+logging:
+  level:
+    root: INFO
+    com.vehicle.backend: DEBUG

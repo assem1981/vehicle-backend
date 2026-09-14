@@ -1,0 +1,20 @@
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE & Editor Settings
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Log Files
+*.log
