@@ -27,6 +27,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserProfile(userPrincipal.getId()));
     }
 
+    @GetMapping("/admin-contact")
+    public ResponseEntity<UserProfileResponse> getAdminContact() {
+        return ResponseEntity.ok(userService.getAdminUser());
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserProfileResponse> getUserById(@PathVariable Long id) {

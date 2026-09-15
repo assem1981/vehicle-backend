@@ -1,8 +1,11 @@
 package com.vehicle.backend.modules.user.repository;
 
 import com.vehicle.backend.modules.user.entity.HostApprovalStatus;
+import com.vehicle.backend.modules.user.entity.Role;
 import com.vehicle.backend.modules.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Boolean existsByEmail(String email);
     List<User> findByHostApprovalStatus(HostApprovalStatus status);
+
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r = :role")
+    List<User> findByRole(@Param("role") Role role);
 }

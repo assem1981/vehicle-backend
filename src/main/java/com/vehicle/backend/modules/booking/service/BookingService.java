@@ -12,5 +12,6 @@ public interface BookingService {
     List<BookingDto> getBookingsByUser(Long userId);
     List<BookingDto> getBookingsByVehicle(Long vehicleId);
     List<BookingDto> getBookingsByHost(Long hostUserId);
+    List<BookingDto> getAllBookings();
     BookingDto updateBookingStatus(Long id, BookingStatus status);
 }

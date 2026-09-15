@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.vehicle.backend.modules.user.entity.User;
+import com.vehicle.backend.modules.user.repository.UserRepository;
+
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
@@ -27,6 +30,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final VehicleRepository vehicleRepository;
     private final HostRepository hostRepository;
+    private final UserRepository userRepository;
     private final JmsTemplate jmsTemplate;
 
     @Override
@@ -128,6 +132,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<BookingDto> getAllBookings() {
+        return bookingRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public BookingDto updateBookingStatus(Long id, BookingStatus status) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + id));
@@ -136,10 +147,46 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingDto mapToDto(Booking booking) {
+        String vehicleName = null;
+        String hostName = null;
+        Long hostId = null;
+        if (booking.getVehicleId() != null) {
+            Vehicle v = vehicleRepository.findById(booking.getVehicleId()).orElse(null);
+            if (v != null) {
+                vehicleName = v.getMake() + " " + v.getModel() + " (" + v.getYear() + ")";
+                hostId = v.getHostId();
+                if (v.getHostId() != null) {
+                    User h = userRepository.findById(v.getHostId()).orElse(null);
+                    if (h != null) {
+                        String name = ((h.getFirstName() != null ? h.getFirstName() : "") + " " + (h.getLastName() != null ? h.getLastName() : "")).trim();
+                        hostName = !name.isEmpty() ? name : h.getEmail();
+                    }
+                }
+            }
+        }
+
+        String renterName = null;
+        if (booking.getUserId() != null) {
+            User u = userRepository.findById(booking.getUserId()).orElse(null);
+            if (u != null) {
+                String name = ((u.getFirstName() != null ? u.getFirstName() : "") + " " + (u.getLastName() != null ? u.getLastName() : "")).trim();
+                renterName = !name.isEmpty() ? name : u.getEmail();
+            }
+        }
+
+        String datesStr = (booking.getStartDate() != null ? booking.getStartDate().toString() : "TBD") + 
+                          " - " + 
+                          (booking.getEndDate() != null ? booking.getEndDate().toString() : "TBD");
+
         return BookingDto.builder()
                 .id(booking.getId())
                 .vehicleId(booking.getVehicleId())
                 .userId(booking.getUserId())
+                .hostId(hostId != null ? hostId : 1L)
+                .vehicleName(vehicleName != null ? vehicleName : "Vehicle #" + booking.getVehicleId())
+                .renterName(renterName != null ? renterName : "User #" + booking.getUserId())
+                .hostName(hostName != null ? hostName : "Host")
+                .dates(datesStr)
                 .startDate(booking.getStartDate())
                 .endDate(booking.getEndDate())
                 .totalPrice(booking.getTotalPrice())

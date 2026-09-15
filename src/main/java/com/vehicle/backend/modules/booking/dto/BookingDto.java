@@ -14,6 +14,11 @@ public class BookingDto {
     private Long id;
     private Long vehicleId;
     private Long userId;
+    private Long hostId;
+    private String vehicleName;
+    private String renterName;
+    private String hostName;
+    private String dates;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;

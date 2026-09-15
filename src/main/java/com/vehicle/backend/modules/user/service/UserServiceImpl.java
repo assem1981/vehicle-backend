@@ -40,6 +40,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserProfileResponse getAdminUser() {
+        List<User> adminUsers = userRepository.findByRole(com.vehicle.backend.modules.user.entity.Role.ROLE_ADMIN);
+        if (!adminUsers.isEmpty()) {
+            return mapToDto(adminUsers.get(0));
+        }
+        return userRepository.findAll().stream()
+                .filter(u -> u.getRoles() != null && u.getRoles().contains(com.vehicle.backend.modules.user.entity.Role.ROLE_ADMIN))
+                .findFirst()
+                .map(this::mapToDto)
+                .orElseGet(() -> {
+                    List<User> all = userRepository.findAll();
+                    if (!all.isEmpty()) return mapToDto(all.get(0));
+                    return UserProfileResponse.builder()
+                            .id(1L)
+                            .firstName("System")
+                            .lastName("Admin")
+                            .email("admin@vehicle.com")
+                            .build();
+                });
+    }
+
+    @Override
     @CacheEvict(value = "users", key = "#userId")
     public UserProfileResponse updateUserProfile(Long userId, String firstName, String lastName, String phoneNumber) {
         User user = userRepository.findById(userId)

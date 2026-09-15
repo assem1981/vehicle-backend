@@ -8,5 +8,6 @@ public interface UserService {
     UserProfileResponse getUserProfile(Long userId);
     UserProfileResponse getUserProfileByEmail(String email);
     List<UserProfileResponse> getAllUsers();
+    UserProfileResponse getAdminUser();
     UserProfileResponse updateUserProfile(Long userId, String firstName, String lastName, String phoneNumber);
 }
