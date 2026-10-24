@@ -4,7 +4,8 @@
 
 ### Prerequisites
 - Docker and Docker Compose installed
-- At least 2GB RAM available
+- At least 1GB RAM available
+- External MySQL database server accessible
 
 ### 1. Configure Environment Variables
 
@@ -15,7 +16,9 @@ cp .env.example .env
 
 Edit `.env` with your actual values:
 ```env
-MYSQL_ROOT_PASSWORD=your_secure_mysql_password
+SPRING_DATASOURCE_URL=jdbc:mysql://your-mysql-host:3306/vehicle_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+SPRING_DATASOURCE_USERNAME=your_db_username
+SPRING_DATASOURCE_PASSWORD=your_db_password
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 APPLE_CLIENT_ID=your_apple_service_id
@@ -30,6 +33,13 @@ DEFAULT_ADMIN_PASSWORD=YourSecurePassword123!
 docker-compose up -d --build
 ```
 
+This will start:
+- Redis (caching)
+- ActiveMQ (messaging)
+- Vehicle Backend (application)
+
+Note: MySQL is not included in docker-compose as it uses an external database server.
+
 ### 3. View Logs
 
 ```bash
@@ -38,7 +48,8 @@ docker-compose logs -f
 
 # View specific service logs
 docker-compose logs -f app
-docker-compose logs -f mysql
+docker-compose logs -f redis
+docker-compose logs -f activemq
 ```
 
 ### 4. Check Status
@@ -118,29 +129,43 @@ sudo ufw enable
 
 ### MySQL Connection Error: "Connections using insecure transport are prohibited"
 
-This error occurs when MySQL 8.0 has `require_secure_transport=ON` by default. The docker-compose.yml is configured to disable this requirement for local Docker networks using:
+This error occurs when the external MySQL server requires SSL but your connection string has `useSSL=false`.
 
-```yaml
-command: --default-authentication-plugin=mysql_native_password --require_secure_transport=OFF
+**Solution 1: Disable SSL (if external MySQL allows it)**
+Keep `useSSL=false` in your connection string (current default).
+
+**Solution 2: Enable SSL properly**
+If the external MySQL requires SSL, change to:
+```env
+SPRING_DATASOURCE_URL=jdbc:mysql://your-mysql-host:3306/vehicle_db?useSSL=true&trustServerCertificate=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
-If you still encounter this error:
+**Solution 3: Use SSL with certificate**
+If you have SSL certificates, add them to the Docker container and configure:
+```env
+SPRING_DATASOURCE_URL=jdbc:mysql://your-mysql-host:3306/vehicle_db?useSSL=true&clientCertificatePath=/path/to/cert.pem&clientKeyPath=/path/to/key.pem&serverTimezone=UTC
+```
 
-1. Ensure MySQL is fully started before the app:
+### Database Connection Issues
+
+If you can't connect to the external MySQL:
+
+1. Test connectivity from the Docker container:
    ```bash
-   docker-compose logs mysql
+   docker-compose exec app ping your-mysql-host
+   docker-compose exec app nc -zv your-mysql-host 3306
    ```
 
-2. Check health checks are passing:
-   ```bash
-   docker-compose ps
+2. Check if you need to use `host.docker.internal` to access host services:
+   ```env
+   SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/vehicle_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
    ```
 
-3. Verify the connection string in application.yml has `useSSL=false`
+3. Verify credentials and database name in `.env`
 
-### Database Not Ready
+### Service Not Ready
 
-The application uses health checks to ensure MySQL, Redis, and ActiveMQ are ready before starting. If you see connection errors:
+The application uses health checks for Redis and ActiveMQ. If you see connection errors:
 
 ```bash
 # Check service health
@@ -166,10 +191,10 @@ docker-compose restart
 docker-compose restart app
 ```
 
-### Reset Everything (WARNING: Deletes Data)
+### Reset Everything
 
 ```bash
-docker-compose down -v
+docker-compose down
 docker-compose up -d --build
 ```
 
@@ -198,8 +223,8 @@ sudo certbot renew --dry-run
 
 ## Service URLs After Deployment
 
-- **Application**: http://localhost:8080 (or http://your-server-ip:8080)
+- **Application**: http://localhost:8070 (or http://your-server-ip:8070)
 - **Nginx Proxy**: http://localhost (or http://your-domain)
 - **ActiveMQ Console**: http://localhost:8161 (admin/admin)
-- **MySQL**: localhost:3306 (root/password from .env)
+- **MySQL**: External server (configured in .env)
 - **Redis**: localhost:6379
