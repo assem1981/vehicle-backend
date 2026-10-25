@@ -13,6 +13,7 @@ import com.vehicle.backend.security.JwtTokenProvider;
 import com.vehicle.backend.security.UserPrincipal;
 import com.vehicle.backend.security.oauth2.AuthProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -48,6 +50,8 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
+
+        log.info("User logged in successfully: {}", loginRequest.getEmail());
 
         // Send audit event via ActiveMQ
         jmsTemplate.convertAndSend(ActiveMQConfig.AUDIT_QUEUE, Map.of(
@@ -166,6 +170,8 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
+
+        log.info("User logged in successfully via {}: {}", provider, user.getEmail());
 
         try {
             jmsTemplate.convertAndSend(ActiveMQConfig.AUDIT_QUEUE, Map.of(
