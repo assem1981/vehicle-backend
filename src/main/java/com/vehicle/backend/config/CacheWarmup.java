@@ -21,9 +21,12 @@ public class CacheWarmup implements CommandLineRunner {
     }
 
     private void clear(String name) {
-        org.springframework.cache.Cache cache = cacheManager.getCache(name);
-        if (cache != null) {
-            cache.clear();
+        try {
+            org.springframework.cache.Cache cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
+        } catch (Exception ignored) {
         }
     }
 }
