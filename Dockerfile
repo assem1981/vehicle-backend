@@ -35,4 +35,8 @@ EXPOSE 8070
 
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
 
+# Redis on the docker bridge gateway (host-side redis-server must bind 172.17.0.1)
+ENV SPRING_REDIS_HOST=172.17.0.1
+ENV SPRING_REDIS_PORT=6379
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
