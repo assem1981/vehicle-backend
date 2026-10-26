@@ -29,6 +29,7 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST:169.58.219.10}
       port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
       timeout: 2000ms
 
   activemq:

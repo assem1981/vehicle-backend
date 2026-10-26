@@ -38,5 +38,6 @@ ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
 # Redis on the docker bridge gateway (host-side redis-server must bind 172.17.0.1)
 ENV SPRING_REDIS_HOST=169.58.219.10
 ENV SPRING_REDIS_PORT=6379
+ENV SPRING_REDIS_PASSWORD="gSII/6/oiMqxDdsWEAfaRk7bJwpdj/Cxyu9g677Z9jo="
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
